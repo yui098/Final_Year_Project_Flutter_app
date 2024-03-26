@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:ui' as ui;
 import 'dart:ui';
 
 import 'package:camera/camera.dart';
-import 'package:image/image.dart' as img;
+import 'package:image/image.dart' as imglib;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
@@ -68,7 +67,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           pathImageModel, 224, 224, 1000,
           labelPath: "assets/labels/label_classification_imageNet.txt");
       _OCRModel = await PytorchLite.loadObjectDetectionModel(
-          pathOCRModel, 23, 640, 640,
+          pathOCRModel, 21, 640, 640,
           labelPath: "assets/labels/labels_YoloV8Detection_character.txt",
           objectDetectionModelType: ObjectDetectionModelType.yolov8);
       _BusLedDisplayModel = await PytorchLite.loadObjectDetectionModel(
@@ -240,7 +239,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       // Stop the stopwatch
       stopwatch.stop();
 
-      ocrDetect = chopFrameAndPrepareOCR(cameraImage,objDetect) as List<ResultObjectDetection>;
+      ocrDetect = await chopFrameAndPrepareOCR(cameraImage,objDetect);
       // print("data outputted $objDetect");
       widget.resultsCallback(objDetect, stopwatch.elapsed);
     }
@@ -253,136 +252,127 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     });
   }
 
-  Future<ui.Image> createImage(
-      Uint8List buffer, int width, int height, ui.PixelFormat pixelFormat) {
-    final Completer<ui.Image> completer = Completer();
-
-    ui.decodeImageFromPixels(buffer, width, height, pixelFormat, (ui.Image img) {
-      completer.complete(img);
-    });
-
-    return completer.future;
+  static imglib.Image convertCameraImage(CameraImage cameraImage) {
+    if (cameraImage.format.group == ImageFormatGroup.yuv420) {
+      return convertYUV420ToImage(cameraImage);
+    } else if (cameraImage.format.group == ImageFormatGroup.bgra8888) {
+      return convertBGRA8888ToImage(cameraImage);
+    } else {
+      throw Exception('Undefined image type.');
+    }
   }
 
-  Uint8List yuv420ToRgba8888(List<Uint8List> planes, int width, int height) {
-    final yPlane = planes[0];
-    final uPlane = planes[1];
-    final vPlane = planes[2];
+  ///
+  /// Converts a [CameraImage] in BGRA888 format to [image_lib.Image] in RGB format
+  ///
+  static imglib.Image convertBGRA8888ToImage(CameraImage cameraImage) {
+    return imglib.Image.fromBytes(
+      width: cameraImage.planes[0].width!,
+      height: cameraImage.planes[0].height!,
+      bytes: cameraImage.planes[0].bytes.buffer,
+      order: imglib.ChannelOrder.bgra,
+    );
+  }
 
-    final Uint8List rgbaBytes = Uint8List(width * height * 4);
+  ///
+  /// Converts a [CameraImage] in YUV420 format to [image_lib.Image] in RGB format
+  ///
+  static imglib.Image convertYUV420ToImage(CameraImage cameraImage) {
+    final imageWidth = cameraImage.width;
+    final imageHeight = cameraImage.height;
 
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        final int yIndex = y * width + x;
-        final int uvIndex = (y ~/ 2) * (width ~/ 2) + (x ~/ 2);
+    final yBuffer = cameraImage.planes[0].bytes;
+    final uBuffer = cameraImage.planes[1].bytes;
+    final vBuffer = cameraImage.planes[2].bytes;
 
-        final int yValue = yPlane[yIndex] & 0xFF;
-        final int uValue = uPlane[uvIndex] & 0xFF;
-        final int vValue = vPlane[uvIndex] & 0xFF;
+    final int yRowStride = cameraImage.planes[0].bytesPerRow;
+    final int yPixelStride = cameraImage.planes[0].bytesPerPixel!;
 
-        final int r = (yValue + 1.13983 * (vValue - 128)).round().clamp(0, 255);
-        final int g =
-        (yValue - 0.39465 * (uValue - 128) - 0.58060 * (vValue - 128))
-            .round()
-            .clamp(0, 255);
-        final int b = (yValue + 2.03211 * (uValue - 128)).round().clamp(0, 255);
+    final int uvRowStride = cameraImage.planes[1].bytesPerRow;
+    final int uvPixelStride = cameraImage.planes[1].bytesPerPixel!;
 
-        final int rgbaIndex = yIndex * 4;
-        rgbaBytes[rgbaIndex] = r.toUnsigned(8);
-        rgbaBytes[rgbaIndex + 1] = g.toUnsigned(8);
-        rgbaBytes[rgbaIndex + 2] = b.toUnsigned(8);
-        rgbaBytes[rgbaIndex + 3] = 255; // Alpha value
+    final image = imglib.Image(width: imageWidth, height: imageHeight);
+
+    for (int h = 0; h < imageHeight; h++) {
+      int uvh = (h / 2).floor();
+
+      for (int w = 0; w < imageWidth; w++) {
+        int uvw = (w / 2).floor();
+
+        final yIndex = (h * yRowStride) + (w * yPixelStride);
+
+        // Y plane should have positive values belonging to [0...255]
+        final int y = yBuffer[yIndex];
+
+        // U/V Values are subsampled i.e. each pixel in U/V chanel in a
+        // YUV_420 image act as chroma value for 4 neighbouring pixels
+        final int uvIndex = (uvh * uvRowStride) + (uvw * uvPixelStride);
+
+        // U/V values ideally fall under [-0.5, 0.5] range. To fit them into
+        // [0, 255] range they are scaled up and centered to 128.
+        // Operation below brings U/V values to [-128, 127].
+        final int u = uBuffer[uvIndex];
+        final int v = vBuffer[uvIndex];
+
+        // Compute RGB values per formula above.
+        int r = (y + v * 1436 / 1024 - 179).round();
+        int g = (y - u * 46549 / 131072 + 44 - v * 93604 / 131072 + 91).round();
+        int b = (y + u * 1814 / 1024 - 227).round();
+
+        r = r.clamp(0, 255);
+        g = g.clamp(0, 255);
+        b = b.clamp(0, 255);
+
+        image.setPixelRgb(w, h, r, g, b);
       }
     }
 
-    return rgbaBytes;
+    return image;
   }
 
-  Future<ui.Image?> ProcessImage(CameraImage availableImage,List<Uint8List> planes) async{
-    print('into ProcessImage');
-    if(Platform.isIOS){
-      print('Device is IOS');
-      ui.Image uiimage = await createImage(availableImage.planes[0].bytes,
-          availableImage.width, availableImage.height, ui.PixelFormat.rgba8888);
-      return uiimage;
-    }else if (Platform.isAndroid){
-      print('Device is Android');
-      // Convert the YUV420 data to a jpeg image.
-      Uint8List data = yuv420ToRgba8888(planes, availableImage.width, availableImage.height);
-      ui.Image uiimage = await createImage(data, availableImage.width, availableImage.height,
-          ui.PixelFormat.rgba8888);
-      return uiimage;
-    }
-    return null;
-  }
-
-  Future<List<ResultObjectDetection>?> chopFrameAndPrepareOCR(CameraImage cameraImage,List<ResultObjectDetection> results) async{
+  Future<List<ResultObjectDetection>> chopFrameAndPrepareOCR(CameraImage cameraImage,List<ResultObjectDetection> results) async{
     print('Start OCR');
 
-    List<Uint8List> planes = [];
-    for (int planeIndex = 0; planeIndex < 3; planeIndex++) {
-      Uint8List buffer;
-      int width;
-      int height;
-      if (planeIndex == 0) {
-        width = cameraImage.width;
-        height = cameraImage.height;
-      } else {
-        width = cameraImage.width ~/ 2;
-        height = cameraImage.height ~/ 2;
-      }
+    var image = convertCameraImage(cameraImage);
 
-      buffer = Uint8List(width * height);
+    var factorX = image.width;
+    var factorY = image.height;
 
-      int pixelStride = cameraImage.planes[planeIndex].bytesPerPixel!;
-      int rowStride = cameraImage.planes[planeIndex].bytesPerRow;
-
-      int index = 0;
-      for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-          buffer[index++] = cameraImage
-              .planes[planeIndex].bytes[i * rowStride + j * pixelStride];
-        }
-      }
-      planes.add(buffer);
-    }
-
-    try{
-      print('camera image to UI image');
-      ui.Image uiimage = ProcessImage(cameraImage,planes) as ui.Image;
-      final pngBytes = await uiimage.toByteData(format: ImageByteFormat.png);
-      img.Image image = Image.memory(Uint8List.view(pngBytes!.buffer)) as img.Image;
-
-      for (var element in results) {
-        print({
-          "score": element.score,
-          "className": element.className,
-          "class": element.classIndex,
-          "rect": {
-            "left": element.rect.left,
-            "top": element.rect.top,
-            "width": element.rect.width,
-            "height": element.rect.height,
-            "right": element.rect.right,
-            "bottom": element.rect.bottom,
-          },
-        });
-        // Crop the image
-        print('chop  image');
-        img.Image cropped = img.copyCrop(
+    for (var element in results) {
+      print({
+        "score": element.score,
+        "className": element.className,
+        "class": element.classIndex,
+        "rect": {
+          "left": element.rect.left,
+          "top": element.rect.top,
+          "width": element.rect.width,
+          "height": element.rect.height,
+          "right": element.rect.right,
+          "bottom": element.rect.bottom,
+        },
+      });
+      if (element.className == 'BusLed') {
+        var cropped = imglib.copyCrop(
             image,
-            x: element.rect.left.toInt(),
-            y: element.rect.top.toInt(),
-            width: element.rect.width.toInt(),
-            height: element.rect.height.toInt());
+            x: (element.rect.left * factorX).toInt(),
+            y: (element.rect.top * factorY).toInt(),
+            width: (element.rect.width * factorX).toInt(),
+            height: (element.rect.height * factorY).toInt());
 
-        ocrDetect = await _OCRModel.getImagePrediction(cropped.toUint8List(),
-            minimumScore: 0.1,
-            iOUThreshold: 0.3);
+        print('Start OCR detect');
+
+        var croppedIMG = Uint8List.fromList(imglib.encodePng(cropped));
+
+        ocrDetect = await _OCRModel.getImagePrediction(croppedIMG,
+            minimumScore: 0.3,
+            iOUThreshold: 0.5);
 
         print('OCR Result');
 
-
+        var previousL = 0.0;
+        String ocrResult = '';
+        var charIndex = 0;
 
         for (var charDetect in ocrDetect){
 
@@ -398,19 +388,19 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               "bottom": charDetect.rect.bottom,
             }
           });
-          return ocrDetect;
+          // if (charDetect.rect.left > previousL){
+          //   ocrResult += charDetect.className!;
+          // }else{
+          //   ocrResult = ocrResult.substring(0,charIndex)+charDetect.className!+ocrResult.substring(charIndex,ocrResult.length);
+          // }
+          // previousL = charDetect.rect.left;
+          // charIndex += 1;
+          ocrResult += charDetect.className!;
+          print(ocrResult);
         }
       }
-    }catch(e){
-      print(e.toString());
     }
-
-
-
-
-
-
-    return [];
+    return ocrDetect;
   }
 
   /// Callback to receive each frame [CameraImage] perform inference on it

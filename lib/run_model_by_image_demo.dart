@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 import 'dart:async';
 
+import 'package:path/path.dart';
 import 'package:flutter/services.dart';
-import 'dart:io';
+import 'package:image/image.dart' as img;
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
 
@@ -18,13 +20,17 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
   //CustomModel? _customModel;
   late ModelObjectDetection _objectModel;
   late ModelObjectDetection _objectModelYoloV8;
+  late ModelObjectDetection _OCRModel;
 
   String? textToShow;
+  String? ocrResult = '';
   List? _prediction;
   File? _image;
+  late Uint8List? croppedIMG = null;
   final ImagePicker _picker = ImagePicker();
   bool objectDetection = false;
   List<ResultObjectDetection?> objDetect = [];
+  List<ResultObjectDetection?> ocrDetect = [];
 
 
   @override
@@ -36,7 +42,7 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
   //load your model
   Future loadModel() async {
     String pathImageModel = "assets/models/model_classification.pt";
-    //String pathCustomModel = "assets/models/custom_model.ptl";
+    String pathOCRModel = "assets/models/v8n_char_best.torchscript";
     String pathObjectDetectionModel = "assets/models/yolov5s.torchscript";
     String pathObjectDetectionModelYolov8 = "assets/models/v8n_led_best.torchscript";
     try {
@@ -50,6 +56,10 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
       _objectModelYoloV8 = await PytorchLite.loadObjectDetectionModel(
           pathObjectDetectionModelYolov8, 2, 640, 640,
           labelPath: "assets/labels/labels_YoloV8Detection_busLed.txt",
+          objectDetectionModelType: ObjectDetectionModelType.yolov8);
+      _OCRModel = await PytorchLite.loadObjectDetectionModel(
+          pathOCRModel, 21, 640, 640,
+          labelPath: "assets/labels/labels_YoloV8Detection_character.txt",
           objectDetectionModelType: ObjectDetectionModelType.yolov8);
     } catch (e) {
       if (e is PlatformException) {
@@ -130,33 +140,171 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     Stopwatch stopwatch = Stopwatch()..start();
 
-    objDetect = await _objectModelYoloV8.getImagePrediction(
-        await File(image!.path).readAsBytes(),
-        minimumScore: 0.1,
-        iOUThreshold: 0.3);
-    textToShow = inferenceTimeAsString(stopwatch);
+    try{
 
-    print('object executed in ${stopwatch.elapsed.inMilliseconds} ms');
-    for (var element in objDetect) {
-      print({
-        "score": element?.score,
-        "className": element?.className,
-        "class": element?.classIndex,
-        "rect": {
-          "left": element?.rect.left,
-          "top": element?.rect.top,
-          "width": element?.rect.width,
-          "height": element?.rect.height,
-          "right": element?.rect.right,
-          "bottom": element?.rect.bottom,
-        },
+      objDetect = await _objectModelYoloV8.getImagePrediction(
+          await File(image!.path).readAsBytes(),
+          minimumScore: 0.5,
+          iOUThreshold: 0.5);
+      textToShow = inferenceTimeAsString(stopwatch);
+
+      print('object executed in ${stopwatch.elapsed.inMilliseconds} ms');
+      for (var element in objDetect) {
+        print({
+          "score": element?.score,
+          "className": element?.className,
+          "class": element?.classIndex,
+          "rect": {
+            "left": element?.rect.left,
+            "top": element?.rect.top,
+            "width": element?.rect.width,
+            "height": element?.rect.height,
+            "right": element?.rect.right,
+            "bottom": element?.rect.bottom,
+          },
+        });
+        if (element?.className == 'BusLed') {
+          ocrResult = await chopFrameAndPrepareOCR(File(image.path).readAsBytes(), element);
+        }
+      }
+      setState(() {
+        //this.objDetect = objDetect;
+        this.ocrResult = ocrResult;
+        _image = File(image.path);
       });
+    }catch(e){
+      print(e);
     }
+  }
 
-    setState(() {
-      //this.objDetect = objDetect;
-      _image = File(image.path);
+  Future runOcrDetectionYoloV8() async {
+    //pick a random image
+
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    Stopwatch stopwatch = Stopwatch()..start();
+
+    try {
+      objDetect = await _OCRModel.getImagePrediction(
+          await File(image!.path).readAsBytes(),
+          minimumScore: 0.5,
+          iOUThreshold: 0.5);
+
+      textToShow = inferenceTimeAsString(stopwatch);
+
+      var resultList = [];
+      var previousL = 0.0;
+      var charIndex = 0;
+
+      print('object executed in ${stopwatch.elapsed.inMilliseconds} ms');
+      for (var element in objDetect) {
+        print({
+          "score": element?.score,
+          "className": element?.className,
+          "class": element?.classIndex,
+          "rect": {
+            "left": element?.rect.left,
+            "top": element?.rect.top,
+            "width": element?.rect.width,
+            "height": element?.rect.height,
+            "right": element?.rect.right,
+            "bottom": element?.rect.bottom,
+          },
+        });
+        print({'charDetect.rect.left > previousL' : element!.rect.left > previousL});
+        resultList.add(element.className!);
+        // if (resultList.length == 0){
+        //   resultList.add(element.className!);
+        // } else if (element.rect.left > previousL) {
+        //   resultList.add(element.className!);
+        // } else {
+        //   resultList.insert(charIndex-1, element.className!);
+        // }
+        // charIndex = ocrResult!.length;
+        // previousL = element.rect.left;
+      }
+      ocrResult = resultList.join();
+      ocrResult = ocrResult?.replaceAll("'", "");
+      print(ocrResult);
+      setState(() {
+        //this.objDetect = objDetect;
+        this.ocrResult = ocrResult;
+        _image = File(image.path);
+      });
+    }catch(e){
+      print(e);
+    }
+  }
+
+  Future<String?> chopFrameAndPrepareOCR(Future<Uint8List> image,ResultObjectDetection? element) async{
+
+    // Crop the image
+    final decodedImage = img.decodeImage(await image);
+
+    var factorX = decodedImage!.width;
+    var factorY = decodedImage.height;
+
+    print({
+      "factorX":factorX,
+      "factorY":factorY,
+      "Left" : element!.rect.left * factorX,
+      "Top" : element.rect.top * factorY,
+      "Width" : element.rect.width * factorX,
+      "Height" : element.rect.height * factorY
     });
+
+    var cropped = img.copyCrop(
+        decodedImage,
+        x: (element.rect.left * factorX).toInt(),
+        y: (element.rect.top * factorY).toInt(),
+        width: (element.rect.width * factorX).toInt(),
+        height: (element.rect.height * factorY).toInt());
+
+    print('Start OCR detect');
+
+    croppedIMG = Uint8List.fromList(img.encodePng(cropped));
+
+    ocrDetect = await _OCRModel.getImagePrediction(croppedIMG!,
+        minimumScore: 0.3,
+        iOUThreshold: 0.5);
+
+    print('OCR Result');
+
+    var previousL = 0.0;
+    var resultList = [];
+    var charIndex = 0;
+
+    for (var charDetect in ocrDetect){
+      print({
+        "Num of result" : ocrDetect.length,
+        "className" : charDetect!.className,
+        "score" : charDetect.score,
+        "rect": {
+          "left": charDetect.rect.left,
+          "top": charDetect.rect.top,
+          "width": charDetect.rect.width,
+          "height": charDetect.rect.height,
+          "right": charDetect.rect.right,
+          "bottom": charDetect.rect.bottom,
+        }
+      });
+      print({'charDetect.rect.left > previousL' : charDetect.rect.left > previousL});
+
+      if (resultList.length == 0){
+        resultList.add(charDetect.className!);
+      } else if (charDetect.rect.left > previousL) {
+        resultList.add(charDetect.className!);
+      } else {
+        resultList.insert(charIndex-1, charDetect.className!);
+      }
+
+      charIndex = ocrResult!.length;
+      previousL = charDetect.rect.left;
+
+    }
+    ocrResult = resultList.join();
+    ocrResult = ocrResult?.replaceAll("'", "");
+    print(ocrResult);
+    return ocrResult;
   }
 
   String inferenceTimeAsString(Stopwatch stopwatch) =>
@@ -230,17 +378,28 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
               child: objDetect.isNotEmpty
                   ? _image == null
                   ? const Text('No image selected.')
+                  : croppedIMG != null
+                  ? Image.memory(croppedIMG!)
                   : _objectModel.renderBoxesOnImage(_image!, objDetect)
                   : _image == null
                   ? const Text('No image selected.')
-                  : Image.file(_image!),
+                  : Image.file(_image!)
             ),
             Center(
               child: Visibility(
                 visible: textToShow != null,
                 child: Text(
                   "$textToShow",
-                  maxLines: 3,
+                  maxLines: 1,
+                ),
+              ),
+            ),
+            Center(
+              child: Visibility(
+                visible: ocrResult != null,
+                child: Text(
+                  "Detected Char : $ocrResult",
+                  maxLines: 1,
                 ),
               ),
             ),
@@ -267,6 +426,18 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
               ),
               child: const Text(
                 "Run object detection YoloV8 with labels",
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: runOcrDetectionYoloV8,
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.blue,
+              ),
+              child: const Text(
+                "Run OCR detection YoloV8 with labels",
                 style: TextStyle(
                   color: Colors.white,
                 ),
