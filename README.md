@@ -1,6 +1,8 @@
-# pytorch_lite_example
+# Final_Year_Project_app
 
-Demonstrates how to use the pytorch_lite plugin.
+A Final Year Project of HKMU student
+
+It handle cameraImage and Image and Uint8List of image.
 
 ## Getting Started
 
