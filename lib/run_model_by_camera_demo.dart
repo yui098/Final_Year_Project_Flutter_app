@@ -18,7 +18,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
   Duration? ocrDetectionInferenceTime;
 
   String? classification;
-  String? ocrResult = '';
+  String? ocrResult;
   Duration? classificationInferenceTime;
 
   /// Scaffold Key
@@ -116,12 +116,12 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
   }
 
   void resultsCallback(
-      List<ResultObjectDetection> results, Duration inferenceTime) {
+      List<ResultObjectDetection> results, Duration inferenceTime, String? ocrReturn) {
     if (!mounted) {
       return;
     }
     setState(() {
-      // this.ocrResult = ocrReturn;
+      ocrResult = ocrReturn;
       this.results = results;
       objectDetectionInferenceTime = inferenceTime;
       for (var element in results) {

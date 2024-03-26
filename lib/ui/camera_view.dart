@@ -17,7 +17,7 @@ import 'camera_view_singleton.dart';
 class CameraView extends StatefulWidget {
   /// Callback to pass results after inference to [HomeView]
   final Function(
-          List<ResultObjectDetection> recognitions, Duration inferenceTime)
+          List<ResultObjectDetection> recognitions, Duration inferenceTime, String? ocrResult)
       resultsCallback;
   final Function(String classification, Duration inferenceTime)
       resultsCallbackClassification;
@@ -243,7 +243,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
       ocrResult = await chopFrameAndPrepareOCR(cameraImage,objDetect);
       // print("data outputted $objDetect");
-      widget.resultsCallback(objDetect, stopwatch.elapsed);
+      widget.resultsCallback(objDetect, stopwatch.elapsed, ocrResult);
     }
     if (!mounted) {
       return;
