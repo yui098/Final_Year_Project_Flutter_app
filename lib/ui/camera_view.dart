@@ -388,14 +388,14 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               "bottom": charDetect.rect.bottom,
             }
           });
-          // if (charDetect.rect.left > previousL){
-          //   ocrResult += charDetect.className!;
-          // }else{
-          //   ocrResult = ocrResult.substring(0,charIndex)+charDetect.className!+ocrResult.substring(charIndex,ocrResult.length);
-          // }
-          // previousL = charDetect.rect.left;
-          // charIndex += 1;
-          ocrResult += charDetect.className!;
+          if (charDetect.rect.left > previousL){
+            ocrResult += charDetect.className!;
+          }else{
+
+          }
+          previousL = charDetect.rect.left;
+          charIndex += 1;
+
           print(ocrResult);
         }
       }

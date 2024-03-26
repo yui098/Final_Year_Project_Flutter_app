@@ -144,8 +144,8 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
 
       objDetect = await _objectModelYoloV8.getImagePrediction(
           await File(image!.path).readAsBytes(),
-          minimumScore: 0.5,
-          iOUThreshold: 0.5);
+          minimumScore: 0.3,
+          iOUThreshold: 0.3);
       textToShow = inferenceTimeAsString(stopwatch);
 
       print('object executed in ${stopwatch.elapsed.inMilliseconds} ms');
@@ -192,7 +192,8 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
       textToShow = inferenceTimeAsString(stopwatch);
 
       var resultList = [];
-      var previousL = 0.0;
+      var minL = 0.0;
+      var maxL = 1.0;
       var charIndex = 0;
 
       print('object executed in ${stopwatch.elapsed.inMilliseconds} ms');
@@ -212,15 +213,15 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
         });
         print({'charDetect.rect.left > previousL' : element!.rect.left > previousL});
         resultList.add(element.className!);
-        // if (resultList.length == 0){
-        //   resultList.add(element.className!);
-        // } else if (element.rect.left > previousL) {
-        //   resultList.add(element.className!);
-        // } else {
-        //   resultList.insert(charIndex-1, element.className!);
-        // }
-        // charIndex = ocrResult!.length;
-        // previousL = element.rect.left;
+        if (resultList.length == 0){
+          resultList.add(element.className!);
+        } else if (element.rect.left < minL) {
+          resultList.insert(charIndex-1, element.className!);
+          minL = element.rect.left;
+        } else {
+
+        }
+
       }
       ocrResult = resultList.join();
       ocrResult = ocrResult?.replaceAll("'", "");
