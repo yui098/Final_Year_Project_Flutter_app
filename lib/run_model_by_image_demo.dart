@@ -192,8 +192,6 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
 
       var resultList = [];
       var minL = 0.0;
-      var maxL = 1.0;
-      var charIndex = 0;
 
       print('object executed in ${stopwatch.elapsed.inMilliseconds} ms');
       for (var element in objDetect) {
