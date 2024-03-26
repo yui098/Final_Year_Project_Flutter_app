@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
 
+import '../sorting_list.dart';
 import 'camera_view_singleton.dart';
 
 
@@ -46,6 +47,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   ClassificationModel? _imageModel;
 
   List<ResultObjectDetection> ocrDetect = [];
+  String? ocrResult = '';
 
   bool classification = false;
   int _camFrameRotation = 0;
@@ -239,7 +241,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       // Stop the stopwatch
       stopwatch.stop();
 
-      ocrDetect = await chopFrameAndPrepareOCR(cameraImage,objDetect);
+      ocrResult = await chopFrameAndPrepareOCR(cameraImage,objDetect);
       // print("data outputted $objDetect");
       widget.resultsCallback(objDetect, stopwatch.elapsed);
     }
@@ -330,7 +332,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     return image;
   }
 
-  Future<List<ResultObjectDetection>> chopFrameAndPrepareOCR(CameraImage cameraImage,List<ResultObjectDetection> results) async{
+  chopFrameAndPrepareOCR(CameraImage cameraImage,List<ResultObjectDetection> results) async{
     print('Start OCR');
 
     var image = convertCameraImage(cameraImage);
@@ -369,9 +371,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
             iOUThreshold: 0.5);
 
         print('OCR Result');
-
-        var previousL = 0.0;
-        String ocrResult = '';
+        var resultList = [];
 
         for (var charDetect in ocrDetect){
 
@@ -387,19 +387,19 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               "bottom": charDetect.rect.bottom,
             }
           });
-          if (charDetect.rect.left > previousL){
-            ocrResult += charDetect.className!;
-          }else{
-
-          }
-          previousL = charDetect.rect.left;
-
-          print(ocrResult);
+          resultList.add(ObjectResult(charDetect.rect.left,charDetect.className!));
+        }
+        resultList.sort((a, b) => b.x_axis.compareTo(a.x_axis));
+        print('Sort by x_axis: $resultList');
+        ocrResult = resultList.join();
+        ocrResult = ocrResult?.replaceAll("'", "");
+        print(ocrResult);
         }
       }
+    setState(() {
+
+    });
     }
-    return ocrDetect;
-  }
 
   /// Callback to receive each frame [CameraImage] perform inference on it
   onLatestImageAvailable(CameraImage cameraImage) async {

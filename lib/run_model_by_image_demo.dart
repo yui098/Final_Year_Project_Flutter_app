@@ -6,6 +6,7 @@ import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
+import 'package:pytorch_lite_example/sorting_list.dart';
 
 class RunModelByImageDemo extends StatefulWidget {
   const RunModelByImageDemo({Key? key}) : super(key: key);
@@ -191,35 +192,26 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
       textToShow = inferenceTimeAsString(stopwatch);
 
       var resultList = [];
-      var minL = 0.0;
 
       print('object executed in ${stopwatch.elapsed.inMilliseconds} ms');
       for (var element in objDetect) {
         print({
-          "score": element?.score,
-          "className": element?.className,
-          "class": element?.classIndex,
+          "score": element!.score,
+          "className": element.className,
+          "class": element.classIndex,
           "rect": {
-            "left": element?.rect.left,
-            "top": element?.rect.top,
-            "width": element?.rect.width,
-            "height": element?.rect.height,
-            "right": element?.rect.right,
-            "bottom": element?.rect.bottom,
+            "left": element.rect.left,
+            "top": element.rect.top,
+            "width": element.rect.width,
+            "height": element.rect.height,
+            "right": element.rect.right,
+            "bottom": element.rect.bottom,
           },
         });
-        print({'charDetect.rect.left > previousL' : element!.rect.left > minL});
-        resultList.add(element.className!);
-        // if (resultList.length == 0){
-        //   resultList.add(element.className!);
-        // } else if (element.rect.left < minL) {
-        //   resultList.insert(charIndex-1, element.className!);
-        //   minL = element.rect.left;
-        // } else if(element.rect.left < maxL){
-        //   maxL = element.rect.left;
-        // }
-
+        resultList.add(ObjectResult(element.rect.left,element.className!));
       }
+      resultList.sort((a, b) => b.x_axis.compareTo(a.x_axis));
+      print('Sort by x_axis: $resultList');
       ocrResult = resultList.join();
       ocrResult = ocrResult?.replaceAll("'", "");
       print(ocrResult);
@@ -267,9 +259,7 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
 
     print('OCR Result');
 
-    var previousL = 0.0;
-    var resultList = [];
-    var charIndex = 0;
+    List<ObjectResult> resultList = [];
 
     for (var charDetect in ocrDetect){
       print({
@@ -285,20 +275,10 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
           "bottom": charDetect.rect.bottom,
         }
       });
-      print({'charDetect.rect.left > previousL' : charDetect.rect.left > previousL});
-
-      if (resultList.length == 0){
-        resultList.add(charDetect.className!);
-      } else if (charDetect.rect.left > previousL) {
-        resultList.add(charDetect.className!);
-      } else {
-        resultList.insert(charIndex-1, charDetect.className!);
-      }
-
-      charIndex = ocrResult!.length;
-      previousL = charDetect.rect.left;
-
+      resultList.add(ObjectResult(charDetect.rect.left,charDetect.className!));
     }
+    resultList.sort((a, b) => b.x_axis.compareTo(a.x_axis));
+    print('Sort by x_axis: $resultList');
     ocrResult = resultList.join();
     ocrResult = ocrResult?.replaceAll("'", "");
     print(ocrResult);

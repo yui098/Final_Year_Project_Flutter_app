@@ -14,11 +14,11 @@ class RunModelByCameraDemo extends StatefulWidget {
 
 class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
   List<ResultObjectDetection>? results;
-  List<ResultObjectDetection>? ocrResults;
   Duration? objectDetectionInferenceTime;
   Duration? ocrDetectionInferenceTime;
 
   String? classification;
+  String? ocrResult = '';
   Duration? classificationInferenceTime;
 
   /// Scaffold Key
@@ -88,6 +88,8 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
                               if (objectDetectionInferenceTime != null)
                                 StatsRow('Object Detection Inference time:',
                                     '${objectDetectionInferenceTime?.inMilliseconds} ms'),
+                              if (ocrResult != null)
+                                StatsRow('Classification:', '$classification'),
                             ],
                           ),
                         )
@@ -119,34 +121,11 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
       return;
     }
     setState(() {
+      // this.ocrResult = ocrReturn;
       this.results = results;
       objectDetectionInferenceTime = inferenceTime;
       for (var element in results) {
         print({
-          "rect": {
-            "left": element.rect.left,
-            "top": element.rect.top,
-            "width": element.rect.width,
-            "height": element.rect.height,
-            "right": element.rect.right,
-            "bottom": element.rect.bottom,
-          },
-        });
-      }
-    });
-  }
-
-  void ocrResultsCallback(
-      List<ResultObjectDetection> ocrResults) {
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      this.ocrResults = ocrResults;
-      for (var element in ocrResults) {
-        print({
-          "className" : element.className,
-          "score" : element.score,
           "rect": {
             "left": element.rect.left,
             "top": element.rect.top,
