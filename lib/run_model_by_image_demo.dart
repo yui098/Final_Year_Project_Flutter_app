@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:async';
 
-import 'package:path/path.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
@@ -211,16 +210,16 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
             "bottom": element?.rect.bottom,
           },
         });
-        print({'charDetect.rect.left > previousL' : element!.rect.left > previousL});
+        print({'charDetect.rect.left > previousL' : element!.rect.left > minL});
         resultList.add(element.className!);
-        if (resultList.length == 0){
-          resultList.add(element.className!);
-        } else if (element.rect.left < minL) {
-          resultList.insert(charIndex-1, element.className!);
-          minL = element.rect.left;
-        } else {
-
-        }
+        // if (resultList.length == 0){
+        //   resultList.add(element.className!);
+        // } else if (element.rect.left < minL) {
+        //   resultList.insert(charIndex-1, element.className!);
+        //   minL = element.rect.left;
+        // } else if(element.rect.left < maxL){
+        //   maxL = element.rect.left;
+        // }
 
       }
       ocrResult = resultList.join();

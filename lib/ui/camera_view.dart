@@ -372,7 +372,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
         var previousL = 0.0;
         String ocrResult = '';
-        var charIndex = 0;
 
         for (var charDetect in ocrDetect){
 
@@ -394,7 +393,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
           }
           previousL = charDetect.rect.left;
-          charIndex += 1;
 
           print(ocrResult);
         }
