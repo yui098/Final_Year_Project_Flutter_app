@@ -226,22 +226,24 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     setState(() {
       predictingObjectDetection = true;
     });
+
     if (_BusLedDisplayModel != null) {
-      // Start the stopwatch
-      Stopwatch stopwatch = Stopwatch()..start();
+    // Start the stopwatch
+    Stopwatch stopwatch = Stopwatch()..start();
 
-      List<ResultObjectDetection> objDetect =
-          await _BusLedDisplayModel!.getCameraImagePrediction(
-        cameraImage,
-        _camFrameRotation,
-        minimumScore: 0.3,
-        iOUThreshold: 0.3,
-      );
+    List<ResultObjectDetection> objDetect =
+    await _BusLedDisplayModel!.getCameraImagePrediction(
+    cameraImage,
+    _camFrameRotation,
+    minimumScore: 0.6,
+    iOUThreshold: 0.7,
+    );
 
-      // Stop the stopwatch
-      stopwatch.stop();
+    // Stop the stopwatch
+    stopwatch.stop();
 
-      ocrResult = await chopFrameAndPrepareOCR(cameraImage,objDetect);
+    ocrResult = await chopFrameAndPrepareOCR(cameraImage,objDetect);
+
       // print("data outputted $objDetect");
       widget.resultsCallback(objDetect, stopwatch.elapsed, ocrResult);
     }
@@ -332,7 +334,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     return image;
   }
 
-  chopFrameAndPrepareOCR(CameraImage cameraImage,List<ResultObjectDetection> results) async{
+  Future<String?> chopFrameAndPrepareOCR(CameraImage cameraImage,List<ResultObjectDetection> results) async{
     print('Start OCR');
 
     var image = convertCameraImage(cameraImage);
@@ -389,16 +391,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           });
           resultList.add(ObjectResult(charDetect.rect.left,charDetect.className!));
         }
-        resultList.sort((a, b) => b.x_axis.compareTo(a.x_axis));
-        print('Sort by x_axis: $resultList');
+        resultList.sort((a, b) => a.x_axis.compareTo(b.x_axis));
         ocrResult = resultList.join();
         ocrResult = ocrResult?.replaceAll("'", "");
-        print(ocrResult);
         }
       }
-    setState(() {
-
-    });
+    return ocrResult;
     }
 
   /// Callback to receive each frame [CameraImage] perform inference on it
@@ -411,6 +409,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
     // log("will start prediction");
     // log("Converted camera image");
+    // var image = convertCameraImage(cameraImage);
 
     //runClassification(cameraImage);
     runObjectDetection(cameraImage);

@@ -187,7 +187,7 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
       objDetect = await _OCRModel.getImagePrediction(
           await File(image!.path).readAsBytes(),
           minimumScore: 0.5,
-          iOUThreshold: 0.5);
+          iOUThreshold: 0.9);
 
       textToShow = inferenceTimeAsString(stopwatch);
 
@@ -210,7 +210,7 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
         });
         resultList.add(ObjectResult(element.rect.left,element.className!));
       }
-      resultList.sort((a, b) => b.x_axis.compareTo(a.x_axis));
+      resultList.sort((a, b) => a.x_axis.compareTo(b.x_axis));
       print('Sort by x_axis: $resultList');
       ocrResult = resultList.join();
       ocrResult = ocrResult?.replaceAll("'", "");
@@ -254,8 +254,8 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
     croppedIMG = Uint8List.fromList(img.encodePng(cropped));
 
     ocrDetect = await _OCRModel.getImagePrediction(croppedIMG!,
-        minimumScore: 0.3,
-        iOUThreshold: 0.5);
+        minimumScore: 0.25,
+        iOUThreshold: 0.2);
 
     print('OCR Result');
 
@@ -277,11 +277,9 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
       });
       resultList.add(ObjectResult(charDetect.rect.left,charDetect.className!));
     }
-    resultList.sort((a, b) => b.x_axis.compareTo(a.x_axis));
-    print('Sort by x_axis: $resultList');
+    resultList.sort((a, b) => a.x_axis.compareTo(b.x_axis));
     ocrResult = resultList.join();
     ocrResult = ocrResult?.replaceAll("'", "");
-    print(ocrResult);
     return ocrResult;
   }
 
@@ -356,8 +354,8 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
               child: objDetect.isNotEmpty
                   ? _image == null
                   ? const Text('No image selected.')
-                  : croppedIMG != null
-                  ? Image.memory(croppedIMG!)
+                  // : croppedIMG != null
+                  // ? Image.memory(croppedIMG!)
                   : _objectModel.renderBoxesOnImage(_image!, objDetect)
                   : _image == null
                   ? const Text('No image selected.')
@@ -376,7 +374,7 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
               child: Visibility(
                 visible: ocrResult != null,
                 child: Text(
-                  "Detected Char : $ocrResult",
+                  "Detected Character : $ocrResult",
                   maxLines: 1,
                 ),
               ),
