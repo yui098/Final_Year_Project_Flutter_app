@@ -176,10 +176,10 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       return Container();
     }
 
-    // return CameraPreview(cameraController!);
+    return CameraPreview(cameraController!);
     // return cameraController!.buildPreview();
 
-    return Center(child: Image.memory(croppedIMG!));
+    //return Center(child: Image.memory(croppedIMG!));
 
     // return AspectRatio(
     //     aspectRatio: cameraController!.value.aspectRatio,
@@ -236,7 +236,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
     var image = img_util.ImageUtils.processCameraImage(cameraImage)!;
 
-    image = imglib.copyRotate(image, angle: 180);
+    image = imglib.copyRotate(image, angle: 0);
 
     List<ResultObjectDetection> objDetect =
     await _busLedDisplayModel!.getImagePrediction(
