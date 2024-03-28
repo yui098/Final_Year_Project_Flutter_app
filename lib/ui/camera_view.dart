@@ -52,7 +52,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   bool classification = false;
   int _camFrameRotation = 0;
   String errorMessage = "";
-  Uint8List? croppedIMG = null;
 
   @override
   void initState() {
@@ -172,14 +171,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     // Return empty container while the camera is not initialized
-    if (croppedIMG == null ||cameraController == null || !cameraController!.value.isInitialized) {
+    if (cameraController == null || !cameraController!.value.isInitialized) {
       return Container();
     }
 
     return CameraPreview(cameraController!);
     // return cameraController!.buildPreview();
-
-    //return Center(child: Image.memory(croppedIMG!));
 
     // return AspectRatio(
     //     aspectRatio: cameraController!.value.aspectRatio,
@@ -284,10 +281,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       if (element.classIndex == 0) {
 
       croppedIMG = convertToUint8List(chopImage(image, element));
-
-      setState(() {
-        croppedIMG = croppedIMG;
-      });
 
         ocrDetect = await _ocrModel.getImagePrediction(
           croppedIMG!,
