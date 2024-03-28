@@ -406,7 +406,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     return ocrResult;
     }
 
-    chopImage(imglib.Image image, ResultObjectDetection element){
+    Uint8List chopImage(imglib.Image image, ResultObjectDetection element){
       var factorX = image.width;
       var factorY = image.height;
 
