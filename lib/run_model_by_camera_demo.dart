@@ -88,8 +88,8 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
                               if (objectDetectionInferenceTime != null)
                                 StatsRow('Object Detection Inference time:',
                                     '${objectDetectionInferenceTime?.inMilliseconds} ms'),
-                              if (ocrResult != null)
-                                StatsRow('Classification:', '$classification'),
+                              if (ocrResult != '')
+                                StatsRow('OCR Result:', '$ocrResult'),
                             ],
                           ),
                         )
