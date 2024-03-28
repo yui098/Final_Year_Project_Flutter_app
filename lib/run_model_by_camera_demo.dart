@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
-import 'package:pytorch_lite_example/ui/box_widget.dart';
+import 'package:FYP_demo_app/ui/box_widget.dart';
 
 import 'ui/camera_view.dart';
 
@@ -124,18 +124,20 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
       ocrResult = ocrReturn;
       this.results = results;
       objectDetectionInferenceTime = inferenceTime;
-      for (var element in results) {
-        print({
-          "rect": {
-            "left": element.rect.left,
-            "top": element.rect.top,
-            "width": element.rect.width,
-            "height": element.rect.height,
-            "right": element.rect.right,
-            "bottom": element.rect.bottom,
-          },
-        });
-      }
+      // for (var element in results) {
+      //   print({
+      //     "score" : element.score,
+      //     "className" : element.className,
+      //     "rect": {
+      //       "left": element.rect.left,
+      //       "top": element.rect.top,
+      //       "width": element.rect.width,
+      //       "height": element.rect.height,
+      //       "right": element.rect.right,
+      //       "bottom": element.rect.bottom,
+      //     },
+      //   });
+      // }
     });
   }
 

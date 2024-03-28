@@ -6,7 +6,7 @@ import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
-import 'package:pytorch_lite_example/sorting_list.dart';
+import 'package:FYP_demo_app/sorting_list.dart';
 
 class RunModelByImageDemo extends StatefulWidget {
   const RunModelByImageDemo({Key? key}) : super(key: key);

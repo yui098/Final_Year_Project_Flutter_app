@@ -52,6 +52,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   bool classification = false;
   int _camFrameRotation = 0;
   String errorMessage = "";
+  Uint8List? croppedIMG = null;
+
   @override
   void initState() {
     super.initState();
@@ -120,7 +122,6 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           errorMessage = (e.toString());
           break;
       }
-      setState(() {});
     }
     // Initially predicting = false
     setState(() {
@@ -171,16 +172,18 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     // Return empty container while the camera is not initialized
-    if (cameraController == null || !cameraController!.value.isInitialized) {
+    if (croppedIMG == null ||cameraController == null || !cameraController!.value.isInitialized) {
       return Container();
     }
 
-    return CameraPreview(cameraController!);
-    //return cameraController!.buildPreview();
+    // return CameraPreview(cameraController!);
+    // return cameraController!.buildPreview();
+
+    return Center(child: Image.memory(croppedIMG!));
 
     // return AspectRatio(
-    //     // aspectRatio: cameraController.value.aspectRatio,
-    //     child: CameraPreview(cameraController));
+    //     aspectRatio: cameraController!.value.aspectRatio,
+    //     child: CameraPreview(cameraController!));
   }
 
   runClassification(CameraImage cameraImage) async {
@@ -231,18 +234,21 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     // Start the stopwatch
     Stopwatch stopwatch = Stopwatch()..start();
 
+    var image = img_util.ImageUtils.processCameraImage(cameraImage)!;
+
+    image = imglib.copyRotate(image, angle: 180);
+
     List<ResultObjectDetection> objDetect =
-    await _busLedDisplayModel!.getCameraImagePrediction(
-    cameraImage,
-    180,
-    minimumScore: 0.2,
+    await _busLedDisplayModel!.getImagePrediction(
+      convertToUint8List(image),
+    minimumScore: 0.5,
     iOUThreshold: 0.3,
     );
 
     // Stop the stopwatch
     stopwatch.stop();
 
-    ocrResult = await chopFrameAndPrepareOCR(cameraImage,objDetect);
+    ocrResult = await chopFrameAndPrepareOCR(image,objDetect);
 
       // print("data outputted $objDetect");
       widget.resultsCallback(objDetect, stopwatch.elapsed, ocrResult);
@@ -256,90 +262,9 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     });
   }
 
-  // static imglib.Image convertCameraImage(CameraImage cameraImage) {
-  //   if (cameraImage.format.group == ImageFormatGroup.yuv420) {
-  //     return convertYUV420ToImage(cameraImage);
-  //   } else if (cameraImage.format.group == ImageFormatGroup.bgra8888) {
-  //     return convertBGRA8888ToImage(cameraImage);
-  //   } else {
-  //     throw Exception('Undefined image type.');
-  //   }
-  // }
-  //
-  // ///
-  // /// Converts a [CameraImage] in BGRA888 format to [image_lib.Image] in RGB format
-  // ///
-  // static imglib.Image convertBGRA8888ToImage(CameraImage cameraImage) {
-  //   return imglib.Image.fromBytes(
-  //     width: cameraImage.width,
-  //     height: cameraImage.height,
-  //     bytes: cameraImage.planes[0].bytes.buffer,
-  //     order: imglib.ChannelOrder.rgb,
-  //   );
-  // }
-  //
-  // ///
-  // /// Converts a [CameraImage] in YUV420 format to [image_lib.Image] in RGB format
-  // ///
-  // static imglib.Image convertYUV420ToImage(CameraImage cameraImage) {
-  //   final imageWidth = cameraImage.width;
-  //   final imageHeight = cameraImage.height;
-  //
-  //   final yBuffer = cameraImage.planes[0].bytes;
-  //   final uBuffer = cameraImage.planes[1].bytes;
-  //   final vBuffer = cameraImage.planes[2].bytes;
-  //
-  //   final int yRowStride = cameraImage.planes[0].bytesPerRow;
-  //   final int yPixelStride = cameraImage.planes[0].bytesPerPixel!;
-  //
-  //   final int uvRowStride = cameraImage.planes[1].bytesPerRow;
-  //   final int uvPixelStride = cameraImage.planes[1].bytesPerPixel!;
-  //
-  //   final image = imglib.Image(width: imageWidth, height: imageHeight);
-  //
-  //   for (int h = 0; h < imageHeight; h++) {
-  //     int uvh = (h / 2).floor();
-  //
-  //     for (int w = 0; w < imageWidth; w++) {
-  //       int uvw = (w / 2).floor();
-  //
-  //       final yIndex = (h * yRowStride) + (w * yPixelStride);
-  //
-  //       // Y plane should have positive values belonging to [0...255]
-  //       final int y = yBuffer[yIndex];
-  //
-  //       // U/V Values are subsampled i.e. each pixel in U/V chanel in a
-  //       // YUV_420 image act as chroma value for 4 neighbouring pixels
-  //       final int uvIndex = (uvh * uvRowStride) + (uvw * uvPixelStride);
-  //
-  //       // U/V values ideally fall under [-0.5, 0.5] range. To fit them into
-  //       // [0, 255] range they are scaled up and centered to 128.
-  //       // Operation below brings U/V values to [-128, 127].
-  //       final int u = uBuffer[uvIndex];
-  //       final int v = vBuffer[uvIndex];
-  //
-  //       // Compute RGB values per formula above.
-  //       int r = (y + v * 1436 / 1024 - 179).round();
-  //       int g = (y - u * 46549 / 131072 + 44 - v * 93604 / 131072 + 91).round();
-  //       int b = (y + u * 1814 / 1024 - 227).round();
-  //
-  //       r = r.clamp(0, 255);
-  //       g = g.clamp(0, 255);
-  //       b = b.clamp(0, 255);
-  //
-  //       image.setPixelRgb(w, h, r, g, b);
-  //     }
-  //   }
-  //
-  //   return image;
-  // }
+  Future<String?> chopFrameAndPrepareOCR(imglib.Image image,List<ResultObjectDetection> results) async{
 
-  Future<String?> chopFrameAndPrepareOCR(CameraImage cameraImage,List<ResultObjectDetection> results) async{
-    print('Start OCR');
-
-    var image = img_util.ImageUtils.processCameraImage(cameraImage)!;
-
-
+    var resultList = [];
 
     for (var element in results) {
       print({
@@ -355,38 +280,27 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           "bottom": element.rect.bottom,
         },
       });
-      if (element.className == 'HongKongBus') {
-        var croppedIMG = chopImage(image,element);
 
-        print('Start OCR detect');
+      if (element.classIndex == 0) {
 
-        var ledDetect = await _busLedDisplayModel!.getImagePrediction(
-            croppedIMG,
-            minimumScore: 0.5,
-            iOUThreshold: 0.5
-        );
+      croppedIMG = convertToUint8List(chopImage(image, element));
 
-        if (ledDetect.length == 0) {
-          return ocrResult;
-        }
-
-        croppedIMG = chopImage(image,ledDetect[ledDetect.length-1]);
+      setState(() {
+        croppedIMG = croppedIMG;
+      });
 
         ocrDetect = await _ocrModel.getImagePrediction(
-          croppedIMG,
-          minimumScore: 0.1,
-          iOUThreshold: 0.3,
+          croppedIMG!,
+          minimumScore: 0.5,
+          iOUThreshold: 0.1,
         );
 
-        print({'Number of Ocr result' : ocrDetect.length});
+        print({'Number of Ocr result': ocrDetect.length});
 
-        var resultList = [];
-
-        for (var charDetect in ocrDetect){
-
+        for (var charDetect in ocrDetect) {
           print({
-            "className" : charDetect.className,
-            "score" : charDetect.score,
+            "className": charDetect.className,
+            "score": charDetect.score,
             "rect": {
               "left": charDetect.rect.left,
               "top": charDetect.rect.top,
@@ -396,30 +310,17 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
               "bottom": charDetect.rect.bottom,
             }
           });
-          resultList.add(ObjectResult(charDetect.rect.left,charDetect.className!));
-        }
-        resultList.sort((a, b) => a.x_axis.compareTo(b.x_axis));
-        ocrResult = resultList.join();
-        ocrResult = ocrResult?.replaceAll("'", "");
+          resultList.add(ObjectResult(charDetect.rect.left, charDetect.className!));
         }
       }
-    return ocrResult;
+      resultList.sort((a, b) => a.x_axis.compareTo(b.x_axis));
+      ocrResult = resultList.join();
+      ocrResult = ocrResult?.replaceAll("'", "");
     }
+  return ocrResult;
+  }
 
-    Uint8List chopImage(imglib.Image image, ResultObjectDetection element){
-      var factorX = image.width;
-      var factorY = image.height;
 
-      var cropped = imglib.copyCrop(
-          image,
-          x: (element.rect.left * factorX).toInt(),
-          y: (element.rect.top * factorY).toInt(),
-          width: (element.rect.width * factorX).toInt(),
-          height: (element.rect.height * factorY).toInt());
-
-      var croppedIMG = Uint8List.fromList(imglib.encodePng(cropped));
-      return croppedIMG;
-    }
 
   /// Callback to receive each frame [CameraImage] perform inference on it
   onLatestImageAvailable(CameraImage cameraImage) async {
