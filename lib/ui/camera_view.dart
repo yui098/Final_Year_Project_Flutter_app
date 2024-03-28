@@ -231,16 +231,24 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     // Start the stopwatch
     Stopwatch stopwatch = Stopwatch()..start();
 
+    List<ResultObjectDetection> objDetect =
+    await _busLedDisplayModel!.getCameraImagePrediction(
+      cameraImage,
+      0,
+      minimumScore: 0.5,
+      iOUThreshold: 0.3,
+    );
+
     var image = img_util.ImageUtils.processCameraImage(cameraImage)!;
 
     image = imglib.copyRotate(image, angle: 0);
 
-    List<ResultObjectDetection> objDetect =
-    await _busLedDisplayModel!.getImagePrediction(
-      convertToUint8List(image),
-    minimumScore: 0.5,
-    iOUThreshold: 0.3,
-    );
+    // List<ResultObjectDetection> objDetect2 =
+    // await _busLedDisplayModel!.getImagePrediction(
+    //   convertToUint8List(image),
+    // minimumScore: 0.5,
+    // iOUThreshold: 0.3,
+    // );
 
     // Stop the stopwatch
     stopwatch.stop();
@@ -280,10 +288,10 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
       if (element.classIndex == 0) {
 
-      croppedIMG = convertToUint8List(chopImage(image, element));
+      var croppedIMG = convertToUint8List(chopImage(image, element));
 
         ocrDetect = await _ocrModel.getImagePrediction(
-          croppedIMG!,
+          croppedIMG,
           minimumScore: 0.5,
           iOUThreshold: 0.1,
         );
