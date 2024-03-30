@@ -103,7 +103,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
                               if (objectDetectionInferenceTime != null)
                                 StatsRow('Object Detection Inference time:',
                                     '${objectDetectionInferenceTime?.inMilliseconds} ms'),
-                              if (ocrResult != null || ocrResult != 'null')
+                              if (ocrResult != null || ocrResult != 'null' || ocrResult != '')
                                 StatsRow('OCR Result:', '$ocrResult'),
                               ElevatedButton(
                                   child: targetRoute == null?const Text("Find New Route"):Text("Current finding Route $targetRoute"),
