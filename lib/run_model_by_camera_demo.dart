@@ -13,16 +13,31 @@ class RunModelByCameraDemo extends StatefulWidget {
 }
 
 class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
+  TextEditingController? targetInputController = TextEditingController();
   List<ResultObjectDetection>? results;
   Duration? objectDetectionInferenceTime;
   Duration? ocrDetectionInferenceTime;
 
   String? classification;
+  String? targetRoute;
   String? ocrResult;
   Duration? classificationInferenceTime;
 
   /// Scaffold Key
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      targetRoute = await targetInputDialog();
+    });
+    setState(() {
+      targetRoute = targetRoute;
+      ocrResult = null;
+      print({'Target Route': targetRoute});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,11 +103,18 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
                               if (objectDetectionInferenceTime != null)
                                 StatsRow('Object Detection Inference time:',
                                     '${objectDetectionInferenceTime?.inMilliseconds} ms'),
-                              if (ocrResult != '')
+                              if (ocrResult != null || ocrResult != 'null')
                                 StatsRow('OCR Result:', '$ocrResult'),
+                              ElevatedButton(
+                                  child: targetRoute == null?const Text("Find New Route"):Text("Current finding Route $targetRoute"),
+                                  onPressed: () async {
+                                    //弹出对话框并等待其关闭
+                                    targetRoute = await targetInputDialog();
+                                  }
+                              ),
                             ],
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -104,6 +126,9 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
       ),
     );
   }
+
+
+
 
   /// Returns Stack of bounding boxes
   Widget boundingBoxes2(List<ResultObjectDetection>? results) {
@@ -120,6 +145,21 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
     if (!mounted) {
       return;
     }
+
+    print({'ocrResult':ocrResult,
+      'targetRoute':targetRoute,
+      'ocrResult == targetRoute' : ocrResult == targetRoute});
+
+    if (ocrResult != null && targetRoute != null && ocrResult != 'null' && ocrResult == targetRoute){
+      targetFoundDialog();
+      targetRoute = null;
+      ocrResult = null;
+      setState(() {
+        targetRoute = null;
+        ocrResult = null;
+      });
+    }
+
     setState(() {
       ocrResult = ocrReturn;
       this.results = results;
@@ -150,6 +190,54 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
       this.classification = classification;
       classificationInferenceTime = inferenceTime;
     });
+  }
+
+  Future<String?> targetInputDialog() {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Target Bus Route"),
+          content: const TextField(
+          autofocus: true,
+          decoration: InputDecoration(hintText: 'Enter The Target Bus Route'),
+          ),
+          actions: <Widget>[
+            TextButton(
+            child: Text("SUBMIT"),
+            onPressed: () => Navigator.of(context).pop(targetInputController?.text), // 关闭对话框
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future targetFoundDialog() {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("$targetRoute Arrived"),
+            content: Text('Bus Route $targetRoute is arriving, PLease get on soon.'),
+            actions: <Widget>[
+              TextButton(
+                child: Text("close"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        }
+    );
+  }
+
+  @override
+  void dispose() {
+    targetInputController?.dispose();
+    super.dispose();
   }
 
   // static const BOTTOM_SHEET_RADIUS = Radius.circular(24.0);

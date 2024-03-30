@@ -35,6 +35,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   /// Controller
   CameraController? cameraController;
+  TextEditingController? targetInputController;
 
   /// true when inference is ongoing
   bool predicting = false;
@@ -43,10 +44,11 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   bool predictingObjectDetection = false;
 
   ModelObjectDetection? _busLedDisplayModel;
-  late ModelObjectDetection _ocrModel;
+  ModelObjectDetection? _ocrModel;
   ClassificationModel? _imageModel;
 
   List<ResultObjectDetection> ocrDetect = [];
+  String? targetRoute;
   String? ocrResult = '';
 
   bool classification = false;
@@ -62,7 +64,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   //load your model
   Future loadModel() async {
     String pathImageModel = "assets/models/model_classification.pt";
-    String pathOCRModel = "assets/models/v8n_char_best.torchscript";
+    // String pathOCRModel = "assets/models/v8n_char_best.torchscript";
+    String pathOCRModel = "assets/models/bus_number_ocr_v8n.torchscript";
     String pathObjectDetectionModel = "assets/models/v8n_led_best.torchscript";
 
     try {
@@ -142,7 +145,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     var desc = cameras[idx];
     _camFrameRotation = Platform.isAndroid ? desc.sensorOrientation : 0;
     // cameras[0] for rear-camera
-    cameraController = CameraController(desc, ResolutionPreset.medium,
+    cameraController = CameraController(desc, ResolutionPreset.low,
         imageFormatGroup: Platform.isAndroid
             ? ImageFormatGroup.yuv420
             : ImageFormatGroup.bgra8888,
@@ -267,6 +270,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     });
   }
 
+
+
   Future<String?> chopFrameAndPrepareOCR(imglib.Image image,List<ResultObjectDetection> results) async{
 
     var resultList = [];
@@ -290,7 +295,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
       var croppedIMG = convertToUint8List(chopImage(image, element));
 
-        ocrDetect = await _ocrModel.getImagePrediction(
+        ocrDetect = await _ocrModel!.getImagePrediction(
           croppedIMG,
           minimumScore: 0.5,
           iOUThreshold: 0.1,

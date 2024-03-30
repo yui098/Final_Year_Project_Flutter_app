@@ -42,7 +42,8 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
   //load your model
   Future loadModel() async {
     String pathImageModel = "assets/models/model_classification.pt";
-    String pathOCRModel = "assets/models/v8n_char_best.torchscript";
+    // String pathOCRModel = "assets/models/v8n_char_best.torchscript";
+    String pathOCRModel = "assets/models/bus_number_ocr_v8n.torchscript";  // Train By Momo with preprocess
     String pathObjectDetectionModel = "assets/models/yolov5s.torchscript";
     String pathObjectDetectionModelYolov8 = "assets/models/v8n_led_best.torchscript";
     try {
