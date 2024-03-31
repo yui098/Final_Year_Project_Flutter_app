@@ -13,7 +13,7 @@ class RunModelByCameraDemo extends StatefulWidget {
 }
 
 class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
-  TextEditingController? targetInputController = TextEditingController();
+  TextEditingController? targetInputController = new TextEditingController();
   List<ResultObjectDetection>? results;
   Duration? objectDetectionInferenceTime;
   Duration? ocrDetectionInferenceTime;
@@ -35,7 +35,6 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
     setState(() {
       targetRoute = targetRoute;
       ocrResult = null;
-      print({'Target Route': targetRoute});
     });
   }
 
@@ -146,18 +145,9 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
       return;
     }
 
-    print({'ocrResult':ocrResult,
-      'targetRoute':targetRoute,
-      'ocrResult == targetRoute' : ocrResult == targetRoute});
-
     if (ocrResult != null && targetRoute != null && ocrResult != 'null' && ocrResult == targetRoute){
       targetFoundDialog();
       targetRoute = null;
-      ocrResult = null;
-      setState(() {
-        targetRoute = null;
-        ocrResult = null;
-      });
     }
 
     setState(() {
@@ -199,9 +189,10 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
       builder: (context) {
         return AlertDialog(
           title: const Text("Target Bus Route"),
-          content: const TextField(
-          autofocus: true,
-          decoration: InputDecoration(hintText: 'Enter The Target Bus Route'),
+          content: TextField(
+            controller: targetInputController,
+            autofocus: true,
+            decoration: InputDecoration(hintText: 'Enter The Target Bus Route'),
           ),
           actions: <Widget>[
             TextButton(
@@ -219,8 +210,8 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text("$targetRoute Arrived"),
-            content: Text('Bus Route $targetRoute is arriving, PLease get on soon.'),
+            title: Text("$ocrResult Arrived"),
+            content: Text('Bus Route $ocrResult is arriving, PLease get on soon.'),
             actions: <Widget>[
               TextButton(
                 child: Text("close"),

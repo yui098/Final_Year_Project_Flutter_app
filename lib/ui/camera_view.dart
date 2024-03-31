@@ -145,7 +145,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     var desc = cameras[idx];
     _camFrameRotation = Platform.isAndroid ? desc.sensorOrientation : 0;
     // cameras[0] for rear-camera
-    cameraController = CameraController(desc, ResolutionPreset.low,
+    cameraController = CameraController(desc, ResolutionPreset.medium,
         imageFormatGroup: Platform.isAndroid
             ? ImageFormatGroup.yuv420
             : ImageFormatGroup.bgra8888,
