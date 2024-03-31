@@ -197,7 +197,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
           actions: <Widget>[
             TextButton(
             child: Text("SUBMIT"),
-            onPressed: () => Navigator.of(context).pop(targetInputController?.text), // 关闭对话框
+            onPressed: () => Navigator.of(context).pop(targetInputController?.text.toUpperCase()), // 关闭对话框
             ),
           ],
         );
