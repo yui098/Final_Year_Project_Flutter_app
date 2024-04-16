@@ -20,7 +20,7 @@ class _ChooseDemoState extends State<ChooseDemo> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Pytorch Mobile Example'),
+          title: const Text('Bus Identification Mobile'),
         ),
         body: Builder(builder: (context) {
           return Center(

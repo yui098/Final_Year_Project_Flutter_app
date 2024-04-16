@@ -42,8 +42,8 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
   //load your model
   Future loadModel() async {
     String pathImageModel = "assets/models/model_classification.pt";
-    // String pathOCRModel = "assets/models/v8n_char_best.torchscript";
-    String pathOCRModel = "assets/models/bus_number_ocr_v8n.torchscript";  // Train By Momo with preprocess
+    String pathOCRModel = "assets/models/best_tf.torchscript";
+    // String pathOCRModel = "assets/models/bus_number_ocr_v8n.torchscript";  // Train By Momo with preprocess
     String pathObjectDetectionModel = "assets/models/yolov5s.torchscript";
     String pathObjectDetectionModelYolov8 = "assets/models/v8n_led_best.torchscript";
     try {
@@ -59,8 +59,8 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
           labelPath: "assets/labels/labels_YoloV8Detection_busLed.txt",
           objectDetectionModelType: ObjectDetectionModelType.yolov8);
       _OCRModel = await PytorchLite.loadObjectDetectionModel(
-          pathOCRModel, 21, 640, 640,
-          labelPath: "assets/labels/labels_YoloV8Detection_character.txt",
+          pathOCRModel, 23, 640, 640,
+          labelPath: "assets/labels/labels_YoloV8_ocrN.txt",
           objectDetectionModelType: ObjectDetectionModelType.yolov8);
     } catch (e) {
       if (e is PlatformException) {

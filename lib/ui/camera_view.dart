@@ -64,8 +64,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   //load your model
   Future loadModel() async {
     String pathImageModel = "assets/models/model_classification.pt";
-    // String pathOCRModel = "assets/models/v8n_char_best.torchscript";
-    String pathOCRModel = "assets/models/bus_number_ocr_v8n.torchscript";
+    String pathOCRModel = "assets/models/best_tf.torchscript";
+    // String pathOCRModel = "assets/models/bus_number_ocr_v8n.torchscript";
     String pathObjectDetectionModel = "assets/models/v8n_led_best.torchscript";
 
     try {
@@ -73,8 +73,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           pathImageModel, 224, 224, 1000,
           labelPath: "assets/labels/label_classification_imageNet.txt");
       _ocrModel = await PytorchLite.loadObjectDetectionModel(
-          pathOCRModel, 21, 640, 640,
-          labelPath: "assets/labels/labels_YoloV8Detection_character.txt",
+          pathOCRModel, 23, 640, 640,
+          labelPath: "assets/labels/labels_YoloV8_ocrN.txt",
           objectDetectionModelType: ObjectDetectionModelType.yolov8);
       _busLedDisplayModel = await PytorchLite.loadObjectDetectionModel(
           pathObjectDetectionModel, 2, 640, 640,
