@@ -146,7 +146,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
     }
 
     if (ocrResult != null && targetRoute != null && ocrResult != 'null' && ocrResult == targetRoute){
-      targetFoundDialog();
+      targetFoundDialog(targetRoute!);
       targetRoute = null;
       setState(() {
         targetRoute = null;
@@ -208,13 +208,13 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
     );
   }
 
-  Future targetFoundDialog() {
+  Future targetFoundDialog(String routeNumber) {
     return showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text("$targetRoute Arrived"),
-            content: Text('Bus Route $targetRoute is arriving, Please get on very soon.'),
+            title: Text("$routeNumber Arrived"),
+            content: Text('Bus Route $routeNumber is arriving, Please get on very soon.'),
             actions: <Widget>[
               TextButton(
                 child: Text("close"),
