@@ -298,7 +298,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         ocrDetect = await _ocrModel!.getImagePrediction(
           croppedIMG,
           minimumScore: 0.5,
-          iOUThreshold: 0.1,
+          iOUThreshold: 0.5,
         );
 
         print({'Number of Ocr result': ocrDetect.length});
