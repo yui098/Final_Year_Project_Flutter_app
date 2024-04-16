@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
 import 'package:FYP_demo_app/ui/box_widget.dart';
 
@@ -146,6 +147,13 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
     }
 
     if (ocrResult != null && targetRoute != null && ocrResult != 'null' && ocrResult == targetRoute){
+      HapticFeedback.lightImpact();
+      HapticFeedback.mediumImpact();
+      HapticFeedback.heavyImpact();
+      HapticFeedback.vibrate();
+      HapticFeedback.heavyImpact();
+      HapticFeedback.mediumImpact();
+      HapticFeedback.lightImpact();
       targetFoundDialog(targetRoute!);
       targetRoute = null;
       setState(() {
