@@ -214,7 +214,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
         builder: (context) {
           return AlertDialog(
             title: Text("$targetRoute Arrived"),
-            content: Text('Bus Route $targetRoute is arriving, PLease get on soon.'),
+            content: Text('Bus Route $targetRoute is arriving, Please get on soon.'),
             actions: <Widget>[
               TextButton(
                 child: Text("close"),
