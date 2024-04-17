@@ -1,6 +1,8 @@
 PODS:
   - camera_avfoundation (0.0.1):
     - Flutter
+  - device_info_plus (0.0.1):
+    - Flutter
   - Flutter (1.0.0)
   - image_picker_ios (0.0.1):
     - Flutter
@@ -17,14 +19,18 @@ PODS:
   - pytorch_lite (0.0.1):
     - Flutter
     - LibTorch (~> 1.13.0.1)
+  - vibration (1.7.5):
+    - Flutter
 
 DEPENDENCIES:
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
+  - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - pytorch_lite (from `.symlinks/plugins/pytorch_lite/ios`)
+  - vibration (from `.symlinks/plugins/vibration/ios`)
 
 SPEC REPOS:
   trunk:
@@ -33,6 +39,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   camera_avfoundation:
     :path: ".symlinks/plugins/camera_avfoundation/ios"
+  device_info_plus:
+    :path: ".symlinks/plugins/device_info_plus/ios"
   Flutter:
     :path: Flutter
   image_picker_ios:
@@ -43,15 +51,19 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   pytorch_lite:
     :path: ".symlinks/plugins/pytorch_lite/ios"
+  vibration:
+    :path: ".symlinks/plugins/vibration/ios"
 
 SPEC CHECKSUMS:
   camera_avfoundation: 759172d1a77ae7be0de08fc104cfb79738b8a59e
+  device_info_plus: 97af1d7e84681a90d0693e63169a5d50e0839a0d
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   image_picker_ios: b545a5f16c0fa88e3ecbbce3ed4de45567a8ec18
   integration_test: 13825b8a9334a850581300559b8839134b124670
   LibTorch: 8abfa5fc9d146230b31065a29b0502e1104956ea
   path_provider_foundation: 3784922295ac71e43754bd15e0653ccfd36a147c
   pytorch_lite: 918b8dcad2cc52b17e24297a2e2b4c05fd921df2
+  vibration: 7d883d141656a1c1a6d8d238616b2042a51a1241
 
 PODFILE CHECKSUM: 1959d098c91d8a792531a723c4a9d7e9f6a01e38
 

@@ -17,11 +17,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  pytorch_lite: ^4.2.4
+  pytorch_lite: 4.2.4
   image_picker: ^0.8.5+3
   path_provider: ^2.0.2
   camera: ^0.10.5
   image: ^4.0.15
+  vibration: ^1.8.4
 
 
 

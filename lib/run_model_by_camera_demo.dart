@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pytorch_lite/pytorch_lite.dart';
 import 'package:FYP_demo_app/ui/box_widget.dart';
+import 'package:vibration/vibration.dart';
 
 import 'ui/camera_view.dart';
 
@@ -147,13 +148,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
     }
 
     if (ocrResult != null && targetRoute != null && ocrResult != 'null' && ocrResult == targetRoute){
-      HapticFeedback.lightImpact();
-      HapticFeedback.mediumImpact();
-      HapticFeedback.heavyImpact();
-      HapticFeedback.vibrate();
-      HapticFeedback.heavyImpact();
-      HapticFeedback.mediumImpact();
-      HapticFeedback.lightImpact();
+      Vibration.vibrate(duration: 5000, amplitude: 512);
       targetFoundDialog(targetRoute!);
       targetRoute = null;
       setState(() {
