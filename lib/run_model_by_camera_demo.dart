@@ -107,9 +107,8 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
                               if (ocrResult != null || ocrResult != 'null' || ocrResult != '')
                                 StatsRow('OCR Result:', '$ocrResult'),
                               ElevatedButton(
-                                  child: targetRoute == null?const Text("Find New Route"):Text("Current finding Route $targetRoute"),
+                                  child: targetRoute == null?const Text("Find New Route"):Text("currently searching for bus $targetRoute"),
                                   onPressed: () async {
-                                    //弹出对话框并等待其关闭
                                     targetRoute = await targetInputDialog();
                                   }
                               ),
@@ -198,11 +197,11 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
           content: TextField(
             controller: targetInputController,
             autofocus: true,
-            decoration: InputDecoration(hintText: 'Enter The Target Bus Route'),
+            decoration: InputDecoration(hintText: 'Enter the target bus route'),
           ),
           actions: <Widget>[
             TextButton(
-            child: Text("SUBMIT"),
+            child: Text("Start searching"),
             onPressed: () => Navigator.of(context).pop(targetInputController?.text.toUpperCase()), // 关闭对话框
             ),
           ],
@@ -217,7 +216,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
         builder: (context) {
           return AlertDialog(
             title: Text("$routeNumber Arrived"),
-            content: Text('Bus Route $routeNumber is arriving, Please get on very soon.'),
+            content: Text('Bus $routeNumber is approaching. Please prepare to board.'),
             actions: <Widget>[
               TextButton(
                 child: Text("close"),
