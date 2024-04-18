@@ -107,7 +107,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
                               if (ocrResult != null || ocrResult != 'null' || ocrResult != '')
                                 StatsRow('OCR Result:', '$ocrResult'),
                               ElevatedButton(
-                                  child: targetRoute == null?const Text("Find New Route"):Text("currently searching for bus $targetRoute"),
+                                  child: targetRoute == null?const Text("preparing to start"):Text("currently looking for bus $targetRoute"),
                                   onPressed: () async {
                                     targetRoute = await targetInputDialog();
                                   }
@@ -193,11 +193,11 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Target Bus Route"),
+          title: const Text("Target bus route:"),
           content: TextField(
             controller: targetInputController,
             autofocus: true,
-            decoration: InputDecoration(hintText: 'Enter the target bus route'),
+            decoration: InputDecoration(hintText: 'Enter target bus route here'),
           ),
           actions: <Widget>[
             TextButton(
