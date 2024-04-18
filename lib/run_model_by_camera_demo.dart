@@ -107,7 +107,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
                               if (ocrResult != null || ocrResult != 'null' || ocrResult != '')
                                 StatsRow('OCR Result:', '$ocrResult'),
                               ElevatedButton(
-                                  child: targetRoute == null?const Text("Find New Route"):Text("Current searching bus $targetRoute"),
+                                  child: targetRoute == null?const Text("preparing to start"):Text("currently looking for bus $targetRoute"),
                                   onPressed: () async {
                                     //pop and wait until close
                                     targetRoute = await targetInputDialog();
@@ -194,15 +194,15 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Target Bus Route"),
+          title: const Text("Target bus route:"),
           content: TextField(
             controller: targetInputController,
             autofocus: true,
-            decoration: InputDecoration(hintText: 'Enter The Target Bus Route'),
+            decoration: InputDecoration(hintText: 'Enter target bus route here'),
           ),
           actions: <Widget>[
             TextButton(
-            child: Text("SUBMIT"),
+            child: Text("Start identification"),
             onPressed: () => Navigator.of(context).pop(targetInputController?.text.toUpperCase()), // 关闭对话框
             ),
           ],
@@ -217,8 +217,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
         builder: (context) {
           return AlertDialog(
             title: Text("$routeNumber Arrived"),
-            content: Text('Bus $routeNumber is approaching. Please prepare to board.',
-              style: TextStyle(height: 7, fontSize: 20),),
+            content: Text('Bus $routeNumber is approaching. Please prepare to board.'),
             actions: <Widget>[
               TextButton(
                 child: Text("close"),
