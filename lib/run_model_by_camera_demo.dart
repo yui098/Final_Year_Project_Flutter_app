@@ -109,7 +109,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
                               ElevatedButton(
                                   child: targetRoute == null?const Text("Find New Route"):Text("Current searching bus $targetRoute"),
                                   onPressed: () async {
-                                    //弹出对话框并等待其关闭
+                                    //pop and wait until close
                                     targetRoute = await targetInputDialog();
                                   }
                               ),
@@ -218,7 +218,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
           return AlertDialog(
             title: Text("$routeNumber Arrived"),
             content: Text('Bus $routeNumber is approaching. Please prepare to board.',
-              style: DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.3),),
+              style: TextStyle(height: 7, fontSize: 20),),
             actions: <Widget>[
               TextButton(
                 child: Text("close"),
