@@ -109,6 +109,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
                               ElevatedButton(
                                   child: targetRoute == null?const Text("preparing to start"):Text("currently looking for bus $targetRoute"),
                                   onPressed: () async {
+                                    //pop and wait until close
                                     targetRoute = await targetInputDialog();
                                   }
                               ),
