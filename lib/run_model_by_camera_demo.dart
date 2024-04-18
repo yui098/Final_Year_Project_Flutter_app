@@ -201,7 +201,7 @@ class _RunModelByCameraDemoState extends State<RunModelByCameraDemo> {
           ),
           actions: <Widget>[
             TextButton(
-            child: Text("Start searching"),
+            child: Text("Start identification"),
             onPressed: () => Navigator.of(context).pop(targetInputController?.text.toUpperCase()), // 关闭对话框
             ),
           ],
