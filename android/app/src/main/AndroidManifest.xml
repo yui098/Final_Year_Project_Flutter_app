@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.zezo357.pytorch_lite_example">
    <application
-        android:label="pytorch_lite_example"
+        android:label="Bus Route Identification"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

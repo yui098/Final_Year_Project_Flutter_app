@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:FYP_demo_app/run_model_by_camera_demo.dart';
 import 'package:FYP_demo_app/run_model_by_image_demo.dart';
@@ -61,6 +62,9 @@ class _ChooseDemoState extends State<ChooseDemo> {
                       color: Colors.white,
                     ),
                   ),
+                ),
+                const Align(alignment: Alignment.bottomCenter,
+                  child: Text("Deployed 19 April,2024 08:30"),
                 )
               ],
             ),

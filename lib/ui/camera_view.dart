@@ -55,6 +55,10 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
   int _camFrameRotation = 0;
   String errorMessage = "";
 
+  bool showFocusCircle = false;
+  double x = 0;
+  double y = 0;
+
   @override
   void initState() {
     super.initState();
@@ -66,7 +70,8 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     String pathImageModel = "assets/models/model_classification.pt";
     String pathOCRModel = "assets/models/best_tf.torchscript";
     // String pathOCRModel = "assets/models/bus_number_ocr_v8n.torchscript";
-    String pathObjectDetectionModel = "assets/models/v8n_led_best.torchscript";
+    // String pathObjectDetectionModel = "assets/models/v8n_led_best.torchscript";
+    String pathObjectDetectionModel = "assets/models/led_v8n_best_19April.torchscript";
 
     try {
       _imageModel = await PytorchLite.loadClassificationModel(
@@ -177,13 +182,65 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     if (cameraController == null || !cameraController!.value.isInitialized) {
       return Container();
     }
+    return  GestureDetector(
+        onTapUp: (details) {
+          _onTap(details);
+        },
+        child: Stack(
+          children: [
+            CameraPreview(cameraController!),
+            if(showFocusCircle) Positioned(
+                top: y,
+                left: x,
+                child: Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white,width: 1.5)
+                  ),
+                ))
+          ],
+        )
+    );
 
-    return CameraPreview(cameraController!);
+
     // return cameraController!.buildPreview();
 
     // return AspectRatio(
     //     aspectRatio: cameraController!.value.aspectRatio,
     //     child: CameraPreview(cameraController!));
+  }
+
+  Future<void> _onTap(TapUpDetails details) async {
+    if(cameraController!.value.isInitialized) {
+      showFocusCircle = true;
+      x = details.localPosition.dx;
+      y = details.localPosition.dy;
+
+      double fullWidth = MediaQuery.of(context).size.width;
+      double cameraHeight = fullWidth * cameraController!.value.aspectRatio;
+
+      double xp = x / fullWidth;
+      double yp = y / cameraHeight;
+
+      Offset point = Offset(xp,yp);
+      print("point : $point");
+
+      // Manually focus
+      await cameraController!.setFocusPoint(point);
+
+      // Manually set light exposure
+      //controller.setExposurePoint(point);
+
+      setState(() {
+        Future.delayed(const Duration(seconds: 2)).whenComplete(() {
+          setState(() {
+            showFocusCircle = false;
+          });
+        });
+      });
+    }
   }
 
   runClassification(CameraImage cameraImage) async {

@@ -45,7 +45,8 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
     String pathOCRModel = "assets/models/best_tf.torchscript";
     // String pathOCRModel = "assets/models/bus_number_ocr_v8n.torchscript";  // Train By Momo with preprocess
     String pathObjectDetectionModel = "assets/models/yolov5s.torchscript";
-    String pathObjectDetectionModelYolov8 = "assets/models/v8n_led_best.torchscript";
+    // String pathObjectDetectionModelYolov8 = "assets/models/v8n_led_best.torchscript";
+    String pathObjectDetectionModelYolov8 = "assets/models/led_v8n_best_19April.torchscript";
     try {
       _imageModel = await PytorchLite.loadClassificationModel(
           pathImageModel, 224, 224, 1000,
@@ -142,7 +143,6 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
     Stopwatch stopwatch = Stopwatch()..start();
 
     try{
-
       objDetect = await _objectModelYoloV8.getImagePrediction(
           await File(image!.path).readAsBytes(),
           minimumScore: 0.3,
@@ -171,11 +171,14 @@ class _RunModelByImageDemoState extends State<RunModelByImageDemo> {
       setState(() {
         //this.objDetect = objDetect;
         this.ocrResult = ocrResult;
-        _image = File(image.path);
       });
     }catch(e){
       print(e);
     }
+    setState(() {
+      //this.objDetect = objDetect;
+      _image = File(image!.path);
+    });
   }
 
   Future runOcrDetectionYoloV8() async {
